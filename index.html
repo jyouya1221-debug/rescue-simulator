@@ -3,218 +3,162 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>救助順番シミュレーター</title>
+<title>面接シミュレーター</title>
 <style>
-  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-  :root {
-    --bg: #f5f4f0;
-    --surface: #ffffff;
-    --surface2: #f9f8f5;
-    --border: rgba(0,0,0,0.1);
-    --border-strong: rgba(0,0,0,0.18);
-    --text: #1a1a18;
-    --text-sub: #5f5e5a;
-    --text-muted: #888780;
-    --accent: #2563eb;
-    --accent-bg: #eff6ff;
-    --accent-text: #1d4ed8;
-    --danger-bg: #fef2f2;
-    --danger-text: #b91c1c;
-    --warn-bg: #fffbeb;
-    --warn-text: #92400e;
-    --ok-bg: #f0fdf4;
-    --ok-text: #166534;
-    --radius: 8px;
-  }
-  @media (prefers-color-scheme: dark) {
-    :root {
-      --bg: #1a1a18;
-      --surface: #2c2c2a;
-      --surface2: #242422;
-      --border: rgba(255,255,255,0.1);
-      --border-strong: rgba(255,255,255,0.18);
-      --text: #f1efe8;
-      --text-sub: #b4b2a9;
-      --text-muted: #888780;
-      --accent: #3b82f6;
-      --accent-bg: #1e3a5f;
-      --accent-text: #93c5fd;
-      --danger-bg: #3b1212;
-      --danger-text: #fca5a5;
-      --warn-bg: #3b2800;
-      --warn-text: #fcd34d;
-      --ok-bg: #14290a;
-      --ok-text: #86efac;
-    }
-  }
-  body { background: var(--bg); color: var(--text); font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; min-height: 100vh; padding: 1.5rem 1rem; }
-  .wrap { max-width: 760px; margin: 0 auto; }
-  h1 { font-size: 22px; font-weight: 500; margin-bottom: 4px; }
-  .site-sub { font-size: 14px; color: var(--text-sub); margin-bottom: 1.5rem; }
-  .scen-btns { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 1.25rem; }
-  .scen-btn { padding: 6px 14px; border-radius: 20px; border: 0.5px solid var(--border-strong); background: transparent; font-size: 13px; color: var(--text-sub); cursor: pointer; }
-  .scen-btn:hover { background: var(--surface2); }
-  .scen-btn.active { background: var(--accent-bg); color: var(--accent-text); border-color: var(--accent); }
-  .scen-title { font-size: 18px; font-weight: 500; margin-bottom: 4px; }
-  .scen-desc { font-size: 14px; color: var(--text-sub); margin-bottom: 1.25rem; }
-  .status-bar { background: var(--surface2); border-radius: var(--radius); padding: 10px 14px; font-size: 13px; color: var(--text-sub); margin-bottom: 1rem; display: flex; gap: 16px; flex-wrap: wrap; align-items: center; }
-  .status-bar strong { color: var(--text); }
-  .sel-info { margin-left: auto; color: var(--accent-text); font-weight: 500; }
-  .people-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 10px; margin-bottom: 1.5rem; }
-  .card { background: var(--surface); border: 0.5px solid var(--border); border-radius: 12px; padding: 12px; cursor: pointer; transition: border-color 0.15s, transform 0.1s; }
-  .card:hover { border-color: var(--border-strong); transform: translateY(-1px); }
-  .card.selected { border: 2px solid var(--accent); }
-  .card.rescued { opacity: 0.4; pointer-events: none; }
-  .avatar { font-size: 28px; text-align: center; margin-bottom: 6px; }
-  .pname { font-size: 13px; font-weight: 500; text-align: center; margin-bottom: 6px; }
-  .attrs { list-style: none; }
-  .attrs li { font-size: 11px; color: var(--text-sub); display: flex; align-items: center; gap: 4px; padding: 1px 0; }
-  .dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
-  .tag { display: inline-block; font-size: 10px; padding: 2px 6px; border-radius: 4px; }
-  .tag-ok { background: var(--ok-bg); color: var(--ok-text); }
-  .tag-warn { background: var(--warn-bg); color: var(--warn-text); }
-  .tag-danger { background: var(--danger-bg); color: var(--danger-text); }
-  .controls { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 1.5rem; }
-  .btn { padding: 8px 20px; border-radius: var(--radius); border: 0.5px solid var(--border-strong); background: transparent; color: var(--text); font-size: 14px; cursor: pointer; }
-  .btn:hover { background: var(--surface2); }
-  .btn.primary { background: var(--accent); color: #fff; border-color: var(--accent); }
-  .btn.primary:hover { opacity: 0.88; }
-  .btn:disabled { opacity: 0.38; pointer-events: none; }
-  .history-title { font-size: 14px; font-weight: 500; color: var(--text-sub); margin-bottom: 8px; }
-  .h-item { display: flex; align-items: center; gap: 10px; padding: 8px 12px; background: var(--surface2); border-radius: var(--radius); margin-bottom: 6px; font-size: 13px; }
-  .rank { width: 24px; height: 24px; border-radius: 50%; background: var(--accent-bg); color: var(--accent-text); font-size: 11px; font-weight: 500; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
-  .h-time { margin-left: auto; font-size: 11px; color: var(--text-muted); }
-  .result { background: var(--surface); border: 0.5px solid var(--border); border-radius: 12px; padding: 1rem 1.25rem; margin-top: 1.5rem; }
-  .result-title { font-size: 15px; font-weight: 500; margin-bottom: 12px; }
-  .result-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 12px; }
-  .rc { background: var(--surface2); border-radius: var(--radius); padding: 10px 12px; }
-  .rc-label { font-size: 11px; color: var(--text-muted); margin-bottom: 2px; }
-  .rc-val { font-size: 20px; font-weight: 500; }
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{--bg:#f5f4f0;--surface:#fff;--surface1:#f9f8f5;--border:rgba(0,0,0,0.09);--border-strong:rgba(0,0,0,0.16);--text:#1a1a18;--sub:#5f5e5a;--muted:#888780;--accent:#2563eb;--accent-bg:#eff6ff;--accent-text:#1d4ed8;--accent-border:#bfdbfe;--ok-bg:#f0fdf4;--ok-text:#166534;--warn-bg:#fffbeb;--warn-text:#92400e;--r:8px}
+@media(prefers-color-scheme:dark){:root{--bg:#111110;--surface:#1f1f1d;--surface1:#2a2a28;--border:rgba(255,255,255,0.08);--border-strong:rgba(255,255,255,0.15);--text:#f0ede6;--sub:#a8a69f;--muted:#5a5955;--accent:#3b82f6;--accent-bg:#1e3a5f;--accent-text:#93c5fd;--accent-border:#1e40af;--ok-bg:#052e16;--ok-text:#86efac;--warn-bg:#3b2800;--warn-text:#fcd34d}}
+body{background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;min-height:100vh;padding:1.5rem 1rem}
+.wrap{max-width:860px;margin:0 auto}
+h1{font-size:20px;font-weight:500;margin-bottom:4px}
+.site-desc{font-size:13px;color:var(--sub);margin-bottom:1.5rem;line-height:1.6}
+.scen-tabs{display:flex;gap:4px;background:var(--surface1);border:0.5px solid var(--border);border-radius:var(--r);padding:4px;width:fit-content;margin-bottom:1.25rem;flex-wrap:wrap}
+.stab{padding:6px 14px;border-radius:6px;border:none;background:transparent;font-size:13px;color:var(--sub);cursor:pointer}
+.stab:hover{color:var(--text)}
+.stab.active{background:var(--surface);color:var(--text);border:0.5px solid var(--border-strong)}
+.scen-bar{background:var(--surface);border:0.5px solid var(--border);border-radius:12px;padding:1rem 1.25rem;margin-bottom:1.25rem;display:flex;gap:12px;align-items:flex-start;flex-wrap:wrap}
+.si{font-size:22px;flex-shrink:0}
+.sb{flex:1}
+.sb h2{font-size:14px;font-weight:500;margin-bottom:3px}
+.sb p{font-size:12px;color:var(--sub);line-height:1.5}
+.ss{flex-shrink:0;text-align:right}
+.ss-l{font-size:11px;color:var(--muted)}
+.ss-v{font-size:22px;font-weight:500;color:var(--accent-text)}
+.pgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:10px;margin-bottom:1.25rem}
+.pcard{background:var(--surface);border:0.5px solid var(--border);border-radius:12px;padding:12px}
+.pcard-top{display:flex;align-items:center;gap:10px;margin-bottom:10px}
+.pav{font-size:26px;flex-shrink:0}
+.pinfo{flex:1}
+.pname{font-size:13px;font-weight:500;margin-bottom:2px}
+.pbasic{font-size:11px;color:var(--sub)}
+.tag{display:inline-block;font-size:10px;padding:2px 6px;border-radius:4px;font-weight:500;margin-left:4px}
+.tag-a{background:var(--ok-bg);color:var(--ok-text)}
+.tag-b{background:var(--accent-bg);color:var(--accent-text)}
+.tag-c{background:var(--warn-bg);color:var(--warn-text)}
+.tag-d{background:#fef2f2;color:#b91c1c}
+.del-btn{background:none;border:none;cursor:pointer;font-size:13px;color:var(--muted);padding:2px;flex-shrink:0}
+.del-btn:hover{color:#b91c1c}
+.field-label{font-size:11px;color:var(--muted);margin-bottom:3px}
+.field-hint{font-size:10px;color:var(--muted);margin-bottom:6px;line-height:1.5;font-style:italic}
+.pcard textarea{width:100%;font-size:12px;padding:8px;border-radius:var(--r);border:0.5px solid var(--border-strong);background:var(--surface1);color:var(--text);font-family:inherit;resize:vertical;min-height:90px;line-height:1.6}
+.pcard textarea:focus{outline:none;border-color:var(--accent)}
+.add-card{background:var(--surface1);border:0.5px dashed var(--border-strong);border-radius:12px;display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;min-height:140px;gap:6px;color:var(--muted);font-size:12px}
+.add-card:hover{border-color:var(--accent);color:var(--accent-text)}
+.hint{font-size:12px;color:var(--accent-text);padding:10px 14px;background:var(--accent-bg);border-radius:var(--r);border:0.5px solid var(--accent-border);margin-bottom:1rem;line-height:1.6}
+.actions{display:flex;gap:8px;flex-wrap:wrap}
+.btn{padding:9px 22px;border-radius:var(--r);border:0.5px solid var(--border-strong);background:transparent;color:var(--text);font-size:13px;cursor:pointer}
+.btn:hover{background:var(--surface1)}
+.btn.primary{background:var(--accent);color:#fff;border-color:var(--accent);font-weight:500}
+.btn.primary:hover{opacity:.88}
 </style>
 </head>
 <body>
 <div class="wrap">
-  <h1>🚨 救助順番シミュレーター</h1>
-  <p class="site-sub">災害時に誰を先に救助するか判断してみよう</p>
-  <div class="scen-btns" id="scenBtns"></div>
-  <p class="scen-title" id="scenTitle"></p>
-  <p class="scen-desc" id="scenDesc"></p>
-  <div class="status-bar">
-    <span>残り定員: <strong id="slotsLeft"></strong></span>
-    <span>救助済み: <strong id="rescuedCount"></strong> / <strong id="totalCount"></strong></span>
-    <span class="sel-info" id="selInfo"></span>
+  <h1>面接シミュレーター</h1>
+  <p class="site-desc">年齢・性別・学歴は自動生成。テキスト欄にその人の人生・生活・エピソードを書くと、AIが面接官として「何を聞くか」「何を評価するか」を考えて採用判断します。</p>
+  <div class="scen-tabs" id="scenTabs"></div>
+  <div class="scen-bar">
+    <div class="si" id="si"></div>
+    <div class="sb"><h2 id="st"></h2><p id="sd"></p></div>
+    <div class="ss"><div class="ss-l">採用枠</div><div class="ss-v" id="sv"></div></div>
   </div>
-  <div class="people-grid" id="peopleGrid"></div>
-  <div class="controls">
-    <button class="btn primary" id="rescueBtn" disabled>選択した人を救助する</button>
-    <button class="btn" id="resetBtn">リセット</button>
-    <button class="btn" id="newBtn">人物を再生成</button>
-  </div>
-  <div id="historySection" style="display:none">
-    <p class="history-title">救助順番の記録</p>
-    <div id="historyList"></div>
-  </div>
-  <div class="result" id="resultPanel" style="display:none">
-    <p class="result-title">シミュレーション完了！</p>
-    <div class="result-grid" id="resultGrid"></div>
+  <div class="pgrid" id="pgrid"></div>
+  <div class="hint">ボタンを押すとclaude.aiが新しいタブで開き、AIが面接・採用判断をします。claude.aiのアカウントが必要です。</div>
+  <div class="actions">
+    <button class="btn primary" id="judgeBtn">AIに面接・採用判断させる →</button>
+    <button class="btn" id="regenBtn">応募者を再生成</button>
   </div>
 </div>
 <script>
-const scenarios = [
-  { id: 'ship', label: '⛵ 沈没船', title: '沈没船からの救助', desc: '救命ボートの定員は限られています。誰を先に救助しますか？', slots: 3, total: 8 },
-  { id: 'fire', label: '🔥 ビル火災', title: 'ビル火災からの救助', desc: '消防士が一度に救助できる人数は2名。煙が充満する前に行動を。', slots: 2, total: 6 },
-  { id: 'flood', label: '🌊 洪水', title: '洪水時の避難支援', desc: 'ボートに乗れるのは5名。残りは次の便を待つリスクがあります。', slots: 5, total: 10 },
+const scenarios=[
+  {id:'venture',icon:'🚀',label:'ベンチャー',title:'ベンチャー企業・エンジニア採用',desc:'急成長中のスタートアップ。自走力と技術力が求められる。カルチャーフィットも重視。',slots:1,total:4},
+  {id:'large',icon:'🏢',label:'大手企業',title:'大手企業・総合職採用',desc:'創業100年の老舗大企業。安定志向で長期育成型。チームワークとポテンシャルを重視。',slots:2,total:6},
+  {id:'global',icon:'🌐',label:'外資系',title:'外資系企業・即戦力採用',desc:'グローバル展開する外資系企業。即戦力と英語力が必須。成果主義の文化。',slots:1,total:5},
 ];
-const names = ['山田 太郎','鈴木 花子','田中 健一','佐藤 美咲','伊藤 誠','渡辺 さくら','中村 拓海','小林 葵','加藤 龍也','吉田 奈々','山口 大輔','松本 愛','井上 翔','木村 ゆい','林 賢司'];
-const jobs = ['医師','看護師','教師','エンジニア','消防士','農家','会社員','学生','自営業','主婦・主夫','研究者','料理人','公務員'];
-const conds = ['健康','軽傷','中等症','重傷'];
-const condCls = ['tag-ok','tag-warn','tag-danger','tag-danger'];
-const avatarMap = { '男性': ['👨','👴','👦'], '女性': ['👩','👵','👧'] };
-let scen = 0, slots = 3, sel = [], rescued = [], hist = [], people = [], t0 = 0;
-const ri = (a,b) => Math.floor(Math.random()*(b-a+1))+a;
-const pick = a => a[Math.floor(Math.random()*a.length)];
-function genPeople(n) {
-  const used = new Set();
-  return Array.from({length:n},(_,i)=>{
-    let name; do { name=pick(names); } while(used.has(name)); used.add(name);
-    const g = Math.random()>.5?'男性':'女性';
-    const age = ri(4,82);
-    const ag = age<12?2:age>65?1:0;
-    const ci = ri(0,3);
-    const deps = Math.random()>.55?(Math.random()>.5?'子どもあり':'介護家族あり'):null;
-    return {id:i,name,gender:g,age,job:pick(jobs),cond:conds[ci],ci,deps,av:avatarMap[g][ag]};
+const lastNames=['山田','鈴木','田中','佐藤','伊藤','渡辺','中村','小林','加藤','吉田','高橋','松本','斎藤','小川','林','石井','木村','清水'];
+const firstNamesM=['太郎','健一','誠','拓海','龍也','大輔','翔','賢司','蓮','颯'];
+const firstNamesF=['花子','美咲','さくら','葵','奈々','愛','ゆい','陽菜','彩','莉子'];
+const schools=[{l:'東大・京大',c:'tag-a'},{l:'早慶・上智',c:'tag-a'},{l:'MARCH',c:'tag-b'},{l:'地方国立',c:'tag-b'},{l:'私立中堅',c:'tag-c'},{l:'専門・短大',c:'tag-c'},{l:'高卒',c:'tag-d'}];
+const avM=['👨','👨‍💼','👨‍💻','👨‍🎓'];
+const avF=['👩','👩‍💼','👩‍💻','👩‍🎓'];
+let scen=0,people=[];
+const ri=(a,b)=>Math.floor(Math.random()*(b-a+1))+a;
+const pick=a=>a[Math.floor(Math.random()*a.length)];
+function genPerson(id){
+  const g=Math.random()>.5?'男':'女';
+  const age=ri(22,45);
+  const school=schools[ri(0,schools.length-1)];
+  const name=pick(lastNames)+' '+(g==='男'?pick(firstNamesM):pick(firstNamesF));
+  const av=g==='男'?pick(avM):pick(avF);
+  return {id,name,g,age,school,av,profile:''};
+}
+function renderTabs(){
+  document.getElementById('scenTabs').innerHTML=scenarios.map((s,i)=>
+    `<button class="stab${i===scen?' active':''}" onclick="sw(${i})">${s.icon} ${s.label}</button>`).join('');
+}
+function sw(i){scen=i;renderTabs();reset();}
+function reset(){
+  const s=scenarios[scen];
+  people=Array.from({length:s.total},(_,i)=>genPerson(i));
+  document.getElementById('si').textContent=s.icon;
+  document.getElementById('st').textContent=s.title;
+  document.getElementById('sd').textContent=s.desc;
+  document.getElementById('sv').textContent=s.slots+'名';
+  renderGrid();
+}
+function save(){
+  people.forEach(p=>{
+    const el=document.getElementById('pr-'+p.id);
+    if(el)p.profile=el.value;
   });
 }
-function renderScen() {
-  document.getElementById('scenBtns').innerHTML = scenarios.map((s,i)=>`<button class="scen-btn${i===scen?' active':''}" onclick="switchScen(${i})">${s.label}</button>`).join('');
-}
-function switchScen(i) { scen=i; renderScen(); reset(true); }
-function reset(np) {
-  const s = scenarios[scen];
-  slots=s.slots; sel=[]; rescued=[]; hist=[]; t0=Date.now();
-  if(np) people=genPeople(s.total);
-  document.getElementById('scenTitle').textContent=s.title;
-  document.getElementById('scenDesc').textContent=s.desc;
-  document.getElementById('totalCount').textContent=s.total;
-  document.getElementById('historySection').style.display='none';
-  document.getElementById('historyList').innerHTML='';
-  document.getElementById('resultPanel').style.display='none';
-  renderGrid(); updateSt();
-}
-function renderGrid() {
-  document.getElementById('peopleGrid').innerHTML = people.map(p=>{
-    const isR=rescued.includes(p.id), isS=sel.includes(p.id);
-    return `<div class="card${isS?' selected':''}${isR?' rescued':''}" onclick="toggle(${p.id})" id="pc-${p.id}">
-      <div class="avatar">${p.av}</div>
-      <p class="pname">${p.name}</p>
-      <ul class="attrs">
-        <li><span class="dot" style="background:#6c7bf5"></span>${p.age}歳・${p.gender}</li>
-        <li><span class="dot" style="background:#3dae8a"></span>${p.job}</li>
-        <li><span class="tag ${condCls[p.ci]}">${p.cond}</span></li>
-        ${p.deps?`<li><span class="dot" style="background:#e09a2b"></span>${p.deps}</li>`:''}
-      </ul>
+function renderGrid(){
+  let html='';
+  people.forEach(p=>{
+    html+=`<div class="pcard">
+      <div class="pcard-top">
+        <div class="pav">${p.av}</div>
+        <div class="pinfo">
+          <div class="pname">${p.name}</div>
+          <div class="pbasic">${p.age}歳・${p.g}性<span class="tag ${p.school.c}">${p.school.l}</span></div>
+        </div>
+        <button class="del-btn" onclick="deletePerson(${p.id})">✕</button>
+      </div>
+      <div class="field-label">人物・エピソード・生活スタイルなど</div>
+      <div class="field-hint">職歴・スキルだけでなく、日常の過ごし方・趣味・価値観・ダラダラした話など何でもOK</div>
+      <textarea id="pr-${p.id}" placeholder="例：大学卒業後3年間フリーターをしていた。毎日ゲームして過ごしていたが、あるゲームのバグを発見してコミュニティに報告したことがきっかけでプログラミングに興味を持った...">${p.profile}</textarea>
     </div>`;
-  }).join('');
+  });
+  html+=`<div class="add-card" onclick="addPerson()"><span style="font-size:22px">＋</span><span>応募者を追加</span></div>`;
+  document.getElementById('pgrid').innerHTML=html;
 }
-function toggle(id) {
-  if(rescued.includes(id)) return;
-  const idx=sel.indexOf(id);
-  if(idx>-1) { sel.splice(idx,1); }
-  else { if(sel.length>=slots){const o=sel.shift();document.getElementById('pc-'+o).classList.remove('selected');} sel.push(id); }
-  renderGrid(); updateSt();
+function deletePerson(id){
+  save();
+  people=people.filter(p=>p.id!==id);
+  renderGrid();
 }
-function updateSt() {
-  document.getElementById('slotsLeft').textContent=slots-rescued.length%slots||slots;
-  document.getElementById('rescuedCount').textContent=rescued.length;
-  document.getElementById('rescueBtn').disabled=sel.length===0;
-  document.getElementById('selInfo').textContent=sel.length>0?`${sel.length}名を選択中（最大${slots}名）`:'カードをクリックして選択';
+function addPerson(){
+  save();
+  people.push(genPerson(Date.now()));
+  renderGrid();
 }
-function doRescue() {
-  if(!sel.length) return;
-  const wave=[...sel], el=Math.round((Date.now()-t0)/1000);
-  wave.forEach(id=>{ rescued.push(id); hist.push({rank:rescued.length,p:people.find(x=>x.id===id),t:el}); });
-  sel=[];
-  document.getElementById('historySection').style.display='block';
-  document.getElementById('historyList').innerHTML=hist.map(h=>`<div class="h-item"><div class="rank">${h.rank}</div><span>${h.p.av} ${h.p.name}</span><span style="font-size:11px;color:var(--text-muted)">${h.p.age}歳・${h.p.job}・${h.p.cond}</span><span class="h-time">${h.t}秒</span></div>`).join('');
-  renderGrid(); updateSt();
-  if(rescued.length>=people.length) showResult();
+function buildPrompt(){
+  const s=scenarios[scen];
+  const list=people.map((p,i)=>{
+    const profile=p.profile.trim()||'（未入力）';
+    return `【応募者${i+1}】${p.name}（${p.age}歳・${p.g}性・${p.school.l}）\n${profile}`;
+  }).join('\n\n');
+  return `あなたは採用面接官AIです。以下の企業・求人情報と応募者の人物情報をもとに、面接シミュレーションと採用判断を行ってください。\n\n【企業・求人情報】\n${s.title}\n${s.desc}\n採用枠：${s.slots}名（応募者${people.length}名中）\n\n【応募者情報】\n${list}\n\n各応募者について以下を行ってください：\n1. 面接で実際に聞くであろう質問を2〜3個\n2. その人物のどこを評価・懸念するか\n\nそして最後に採用する${s.slots}名を決定し、「今回の"優秀さ"の定義」を明示してください。`;
 }
-function showResult() {
-  const total=Math.round((Date.now()-t0)/1000);
-  const avgAge=Math.round(rescued.map(id=>people.find(p=>p.id===id).age).reduce((a,b)=>a+b,0)/rescued.length);
-  const critical=rescued.filter(id=>people.find(p=>p.id===id).ci>=2).length;
-  const deps=rescued.filter(id=>people.find(p=>p.id===id).deps).length;
-  document.getElementById('resultPanel').style.display='block';
-  document.getElementById('resultGrid').innerHTML=`
-    <div class="rc"><p class="rc-label">救助人数</p><p class="rc-val">${rescued.length}名</p></div>
-    <div class="rc"><p class="rc-label">判断時間</p><p class="rc-val">${total}秒</p></div>
-    <div class="rc"><p class="rc-label">平均年齢</p><p class="rc-val">${avgAge}歳</p></div>
-    <div class="rc"><p class="rc-label">重傷者・扶養あり</p><p class="rc-val">${critical+deps}名</p></div>`;
-}
-document.getElementById('rescueBtn').addEventListener('click',doRescue);
-document.getElementById('resetBtn').addEventListener('click',()=>reset(false));
-document.getElementById('newBtn').addEventListener('click',()=>reset(true));
-renderScen(); reset(true);
+document.getElementById('judgeBtn').addEventListener('click',()=>{
+  save();
+  const prompt=buildPrompt();
+  const url='https://claude.ai/new?q='+encodeURIComponent(prompt);
+  window.open(url,'_blank');
+});
+document.getElementById('regenBtn').addEventListener('click',()=>reset());
+renderTabs();
+reset();
 </script>
 </body>
 </html>
